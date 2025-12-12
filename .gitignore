@@ -1,0 +1,16 @@
+# Secrets and sensitive data
+00-secrets.rsc
+**/secrets*.rsc
+*.backup
+*.rif
+
+# Temporary files
+*.tmp
+*.swp
+*~
+
+# Local configuration overrides
+00-config-local.rsc
+
+# Logs
+*.log

@@ -1,0 +1,195 @@
+############################################################
+# FIREWALL_ADDITIONS.txt
+# Правила для добавления в firewall_complete.rsc
+#
+# ЭТИ ПРАВИЛА НУЖНО ДОБАВИТЬ В firewall_complete.rsc
+# В СООТВЕТСТВУЮЩИЕ СЕКЦИИ В ПРАВИЛЬНОМ ПОРЯДКЕ!
+############################################################
+
+############################################################
+# РАЗДЕЛ 1: ПЕРЕМЕННЫЕ
+# Добавить в секцию "КОНФИГУРАЦИЯ ПЕРЕМЕННЫХ" (строки 16-35)
+############################################################
+
+# После строки 26 (:local CONTAINER_SUBNET "10.11.0.0/24") добавить:
+
+# WiFi VLANs
+:local MAIN_WIFI_V4 "192.168.20.0/24"
+:local GUEST_WIFI_V4 "10.30.0.0/24"
+
+# Access Points (для CAPsMAN)
+:local AP_R2_IP "192.168.1.2"
+:local AP_R3_IP "192.168.1.3"
+
+
+############################################################
+# РАЗДЕЛ 2: INPUT CHAIN - CAPsMAN DISCOVERY
+# Добавить ПОСЛЕ строки 87 (WireGuard) и ПЕРЕД строкой 90 (Логирование WAN)
+############################################################
+
+# CAPsMAN discovery и control
+add chain=input protocol=udp dst-port=5246,5247 \
+    action=accept comment="CAPsMAN: discovery (UDP 5246/5247)"
+add chain=input protocol=tcp dst-port=5246,5247 \
+    action=accept comment="CAPsMAN: control (TCP 5246/5247)"
+
+# Allow Access Points (R2, R3) to manager
+add chain=input src-address=$AP_R2_IP \
+    action=accept comment="Allow AP R2 to manager"
+add chain=input src-address=$AP_R3_IP \
+    action=accept comment="Allow AP R3 to manager"
+
+
+############################################################
+# РАЗДЕЛ 3: FORWARD CHAIN - WiFi ROUTING
+# Добавить ПОСЛЕ строки 115 (LAN → WAN allowed) и ПЕРЕД строкой 117 (Guest network isolation)
+############################################################
+
+# Allow Main WiFi → WAN
+add chain=forward action=accept src-address=$MAIN_WIFI_V4 \
+    out-interface=$WAN_IFACE \
+    comment="Main WiFi → WAN allowed"
+
+
+############################################################
+# РАЗДЕЛ 4: FORWARD CHAIN - GUEST WiFi ISOLATION
+# ЗАМЕНИТЬ существующие правила Guest isolation (строки 118-131)
+# на эти улучшенные правила:
+############################################################
+
+# Guest WiFi isolation (улучшенная версия)
+add chain=forward action=drop src-address=$GUEST_WIFI_V4 \
+    dst-address=$LAN_MAIN_V4 \
+    comment="Guest WiFi → LAN block"
+add chain=forward action=drop src-address=$GUEST_WIFI_V4 \
+    dst-address=$MAIN_WIFI_V4 \
+    comment="Guest WiFi → Main WiFi block"
+add chain=forward action=drop src-address=$GUEST_WIFI_V4 \
+    dst-address=$MGMT_SUBNET_V4 \
+    comment="Guest WiFi → MGMT block"
+add chain=forward action=drop src-address=$GUEST_WIFI_V4 \
+    dst-address=$CONTAINER_SUBNET \
+    comment="Guest WiFi → Containers block"
+
+# Allow Guest WiFi ONLY to Internet
+add chain=forward action=accept src-address=$GUEST_WIFI_V4 \
+    out-interface=$WAN_IFACE \
+    comment="Guest WiFi → WAN allowed"
+
+# Block guest access to router
+add chain=input action=drop src-address=$GUEST_WIFI_V4 \
+    comment="Guest WiFi → router block"
+
+
+############################################################
+# РАЗДЕЛ 5: IPv6 FORWARD CHAIN - WiFi IPv6 (ОПЦИОНАЛЬНО)
+# Если используете IPv6 на WiFi, добавить в секцию IPv6 FORWARD
+# ПОСЛЕ строки 377 (Guest → WAN) и ПЕРЕД строкой 379 (Логирование)
+############################################################
+
+# Main WiFi IPv6 → WAN
+add chain=forward action=accept src-address=$LAN_MAIN_V6 \
+    out-interface=$WAN_IFACE \
+    comment="IPv6 Main WiFi → WAN"
+
+# Guest WiFi IPv6 isolation
+add chain=forward action=drop src-address=$LAN_GUEST_V6 \
+    dst-address=$LAN_MAIN_V6 \
+    comment="IPv6 Guest WiFi → Main WiFi block"
+
+
+############################################################
+# РАЗДЕЛ 6: NAT (ОПЦИОНАЛЬНО)
+# NAT для WiFi уже покрыт общим masquerade (строка 293)
+# Дополнительные правила НЕ нужны, если используете общий masquerade
+############################################################
+
+# Общий masquerade для всех LAN подсетей УЖЕ ЕСТЬ:
+# add chain=srcnat action=masquerade out-interface=$WAN_IFACE \
+#     comment="Default masquerade for LAN and containers"
+
+# Это правило покрывает:
+# - 192.168.1.0/24 (LAN_MAIN_V4)
+# - 192.168.20.0/24 (MAIN_WIFI_V4)
+# - 10.30.0.0/24 (GUEST_WIFI_V4)
+# - 10.11.0.0/24 (CONTAINER_SUBNET)
+
+
+############################################################
+# ИТОГОВАЯ СТРУКТУРА firewall_complete.rsc
+############################################################
+
+# После добавления всех правил порядок должен быть:
+#
+# 1. ПЕРЕМЕННЫЕ (строки 16-40)
+#    - WAN, LAN, MGMT, CONTAINERS
+#    + WiFi VLANs, AP IPs
+#
+# 2. IPv4 FASTTRACK (строка 45)
+#
+# 3. INPUT CHAIN:
+#    - established/related (40)
+#    - invalid drop (44)
+#    - ICMP rate limit (48-51)
+#    - LAN/MGMT access (54-57)
+#    - Container DNS/NTP (64-71)
+#    - Container blocks (74-80)
+#    - VPN ports (85-88)
+#    + CAPsMAN ports (новое)
+#    + AP allowances (новое)
+#    - WAN logging (91-93)
+#    - WAN drop (96-97)
+#
+# 4. FORWARD CHAIN:
+#    - established/related (105)
+#    - invalid drop (109)
+#    - LAN → WAN (113-115)
+#    + Main WiFi → WAN (новое)
+#    - Guest isolation (118-131) → ЗАМЕНИТЬ улучшенными
+#    - Container isolation (138-151)
+#    - xRay routing (161-170)
+#    - Nginx rate limiting (179-196)
+#    - WAN logging (201-203)
+#    - WAN drop (206-207)
+#
+# 5. PROTECTION RULES (214-267)
+#
+# 6. NAT (275-286)
+#
+# 7. IPv6 FIREWALL (293-395)
+
+
+############################################################
+# ПРОВЕРКА ПОСЛЕ ПРИМЕНЕНИЯ
+############################################################
+
+# 1. Проверить порядок правил:
+/ip firewall filter print
+
+# 2. Убедиться что Guest isolation работает:
+# С устройства на Guest WiFi:
+ping 192.168.1.1     # должен быть timeout
+ping 192.168.20.1    # должен быть timeout
+ping 8.8.8.8         # должен работать
+
+# 3. Проверить CAPsMAN discovery:
+/caps-man manager print
+/caps-man registration-table print
+
+# 4. Проверить логи:
+/log print where message~"Guest"
+/log print where message~"CAPsMAN"
+
+
+############################################################
+# ВНИМАНИЕ!
+############################################################
+
+# Порядок правил в firewall КРИТИЧЕСКИ важен!
+#
+# Неправильный порядок может привести к:
+# - Утечке трафика из guest network в LAN
+# - Блокировке легитимного трафика
+# - Проблемам с CAPsMAN discovery
+#
+# Всегда проверяйте правила после применения!

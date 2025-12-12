@@ -1,0 +1,41 @@
+{
+  "log": {
+    "access": "/xray-log/access.log",
+    "error":  "/xray-log/error.log",
+    "loglevel": "warning"
+  },
+  "inbounds": [
+    {
+      "port": 10808,
+      "protocol": "socks",
+      "listen": "0.0.0.0",
+      "settings": { "udp": true }
+    },
+    {
+      "port": 10809,
+      "protocol": "http",
+      "listen": "0.0.0.0"
+    }
+  ],
+  "outbounds": [
+    {
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "<XRAY_REMOTE_SERVER_IP>",
+            "port": <XRAY_REMOTE_PORT>,
+            "users": [
+              { "id": "<XRAY_UUID>", "encryption": "none" }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "tls",
+        "tlsSettings": { "allowInsecure": false }
+      }
+    }
+  ]
+}
