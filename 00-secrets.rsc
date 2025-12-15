@@ -1,0 +1,124 @@
+############################################################
+# 00-secrets.rsc - CREDENTIALS (SENSITIVE!)
+#
+# ⚠️  КРИТИЧЕСКИ ВАЖНО:
+# 1. Заполните ВСЕ плейсхолдеры реальными значениями
+# 2. После импорта НЕМЕДЛЕННО удалите этот файл:
+#    /file remove 00-secrets.rsc
+# 3. НЕ храните этот файл в системе контроля версий!
+# 4. НЕ делайте /export после импорта (credentials будут видны)
+#
+# BACKUP: Используйте ENCRYPTED backup:
+#  /system backup save name=config encryption=aes-sha256 \
+#      password="VeryStrongBackupPassword123!"
+############################################################
+
+############################################################
+# PPPoE WAN CREDENTIALS
+############################################################
+
+:global secPPPoEUser "YOUR_PPPOE_USERNAME"
+:global secPPPoEPass "YOUR_PPPOE_PASSWORD"
+
+############################################################
+# WiFi PASSWORDS
+############################################################
+
+# Main WiFi Network
+:global secWiFiMainPass "SuperSecretWiFi123!ChangeMe"
+
+# Guest WiFi Network
+:global secWiFiGuestPass "GuestPass456!ChangeMe"
+
+# WDS Bridge Password
+:global secWDSPass "WDS_SecurePassword789!ChangeMe"
+
+############################################################
+# VPN CREDENTIALS
+############################################################
+
+# SSTP VPN User/Password (можно создать несколько)
+:global secSSTPUser "vpn_admin"
+:global secSSTPPass "VeryStrongVPNPassword!ChangeMe"
+
+# WireGuard Keys
+:global secWGPrivateKey "YOUR_WIREGUARD_PRIVATE_KEY_HERE"
+:global secWGPublicKey "YOUR_WIREGUARD_PUBLIC_KEY_HERE"
+:global secWGRemotePubKey "REMOTE_SITE_WIREGUARD_PUBLIC_KEY"
+
+############################################################
+# BGP SECURITY
+############################################################
+
+# BGP TCP MD5 Authentication Password
+:global secBGPMD5Key "BGP_MD5_Secret_Key!ChangeMe"
+
+############################################################
+# CERTIFICATE PASSWORDS (если используются)
+############################################################
+
+:global secCertPassword "CertificatePassword!ChangeMe"
+
+############################################################
+# ADMIN PASSWORD REMINDER
+############################################################
+
+# НЕ ХРАНИТЕ admin пароль в файле!
+# Но напоминание о требованиях:
+# - Минимум 20 символов
+# - Буквы верхнего/нижнего регистра + цифры + спецсимволы
+# - Уникальный для каждого роутера
+# - Хранить в password manager (например, KeePass, 1Password)
+
+############################################################
+# ГЕНЕРАЦИЯ СИЛЬНЫХ ПАРОЛЕЙ
+############################################################
+
+# На Linux/macOS:
+# openssl rand -base64 32
+# pwgen -s 32 1
+
+# На Windows PowerShell:
+# -join ((48..57)+(65..90)+(97..122) | Get-Random -Count 32 | % {[char]$_})
+
+# Online (ОСТОРОЖНО! Используйте только trusted сайты):
+# https://bitwarden.com/password-generator/
+
+############################################################
+# BEST PRACTICES
+############################################################
+
+# ✅ DO:
+# - Генерировать случайные пароли (минимум 20 символов)
+# - Использовать уникальные пароли для каждого сервиса
+# - Хранить в encrypted password manager
+# - Регулярно ротировать пароли (раз в 3-6 месяцев)
+# - Использовать encrypted backups
+
+# ❌ DON'T:
+# - Использовать словарные слова
+# - Повторять пароли между сервисами
+# - Хранить в plain text файлах
+# - Коммитить в Git
+# - Отправлять по незашифрованным каналам
+
+############################################################
+# ПОСЛЕ ИМПОРТА - CHECKLIST
+############################################################
+
+# □ Импортирован 00-config.rsc
+# □ Импортирован 00-secrets.rsc
+# □ Все модули (01-14.rsc) импортированы
+# □ Конфигурация работает (проверено)
+# □ УДАЛЁН файл 00-secrets.rsc: /file remove 00-secrets.rsc
+# □ Создан encrypted backup
+# □ Backup сохранён в безопасное место (НЕ на роутере!)
+# □ Пароли добавлены в password manager
+# □ Документирована конфигурация
+
+############################################################
+# END OF SECRETS FILE
+############################################################
+
+:log warning "⚠️  SECRETS loaded from 00-secrets.rsc"
+:log warning "⚠️  DELETE THIS FILE IMMEDIATELY after configuration: /file remove 00-secrets.rsc"
