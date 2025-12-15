@@ -14,3 +14,6 @@
 
 # Logs
 *.log
+
+# Documentation archive (local reference only)
+docs-archive/
