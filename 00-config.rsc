@@ -161,9 +161,23 @@
 
 ############################################################
 # MANAGEMENT ACCESS (IP ranges allowed to access SSH/Winbox)
+#
+# РЕШЕНИЕ CRIT-05: ACL управления
+# - Разрешает доступ к SSH/Winbox из указанных сетей
+# - Рекомендуется: ТОЛЬКО Management VLAN (172.16.99.0/24)
+# - Текущая конфигурация: LAN + Management (для совместимости)
+#
+# Best Practice (рекомендуется для production):
+# :global cfgMgmtAllowedNets [:toarray "172.16.99.0/24"]
+#
+# Current (для совместимости):
 ############################################################
 
 :global cfgMgmtAllowedNets [:toarray "192.168.1.0/24,172.16.99.0/24"]
+
+# Опционально: Разрешить доступ ТОЛЬКО из Management VLAN
+# (закомментируйте строку выше и раскомментируйте строку ниже)
+# :global cfgMgmtAllowedNets [:toarray "172.16.99.0/24"]
 
 ############################################################
 # END OF CONFIGURATION
