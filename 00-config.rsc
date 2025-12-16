@@ -130,7 +130,7 @@
 ############################################################
 
 # SSTP VPN
-:global cfgSS TPCertName "router-cert"
+:global cfgSSTPCertName "router-cert"
 :global cfgSSTPPoolName "pool-sstp"
 :global cfgSSTPPoolRange "192.168.88.2-192.168.88.10"
 :global cfgSSTPDNS "192.168.1.1"
