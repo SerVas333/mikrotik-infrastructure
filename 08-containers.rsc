@@ -2,6 +2,32 @@
 # REQUIRES: 00-config.rsc must be imported first!
 
 ############################################################
+# Create Base Container Directories
+############################################################
+
+# Автоматическое создание базовых каталогов для контейнеров
+# Это необходимо, т.к. RouterOS /file make-directory НЕ создает
+# родительские каталоги автоматически (в отличие от mkdir -p)
+
+/file
+:if ([:len [find name=$cfgContainerTmpDir type="directory"]] = 0) do={
+    make-directory $cfgContainerTmpDir
+    :log info "Created container tmpdir: $cfgContainerTmpDir"
+}
+
+:if ([:len [find name=$cfgContainerImagesRoot type="directory"]] = 0) do={
+    make-directory $cfgContainerImagesRoot
+    :log info "Created container images root: $cfgContainerImagesRoot"
+}
+
+:if ([:len [find name=$cfgContainerDataRoot type="directory"]] = 0) do={
+    make-directory $cfgContainerDataRoot
+    :log info "Created container data root: $cfgContainerDataRoot"
+}
+
+:log info "Base container directories verified/created"
+
+############################################################
 # Container Networking
 ############################################################
 

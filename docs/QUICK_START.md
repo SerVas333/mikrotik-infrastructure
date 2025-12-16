@@ -110,6 +110,35 @@ cp 00-secrets.rsc.template 00-secrets.rsc
 - Container IPs
 - VPN конфигурация
 
+### 2.3 Настройка путей для контейнеров (если планируете использовать)
+
+**По умолчанию в `00-config.rsc`:**
+```routeros
+:global cfgContainerTmpDir "/disk1/tmp"
+:global cfgContainerImagesRoot "/disk1/images"
+:global cfgContainerDataRoot "/disk1/data"
+```
+
+**Если используете USB диск или другой носитель:**
+```routeros
+# Пример для USB диска
+:global cfgContainerTmpDir "/usb1/containers/tmp"
+:global cfgContainerImagesRoot "/usb1/containers/images"
+:global cfgContainerDataRoot "/usb1/containers/data"
+```
+
+**📁 ВАЖНО:** Базовые каталоги (`/usb1/containers/tmp`, `/usb1/containers/images`, `/usb1/containers/data`) создаются **автоматически** при импорте `08-containers.rsc`.
+
+**Если нужно создать вручную (опционально):**
+```routeros
+# Только если есть проблемы с автосозданием
+/file
+make-directory /usb1/containers
+make-directory /usb1/containers/tmp
+make-directory /usb1/containers/images
+make-directory /usb1/containers/data
+```
+
 ---
 
 ## Шаг 3: Загрузка файлов на роутер
