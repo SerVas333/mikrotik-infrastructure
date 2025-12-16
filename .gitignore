@@ -3,6 +3,7 @@
 **/secrets*.rsc
 *.backup
 *.rif
+cloudflare_api
 
 # Temporary files
 *.tmp
