@@ -56,14 +56,18 @@
 :log info "xRay routing table created: $TABLE_XRAY"
 
 ############################################################
-# Mount points для конфигурации и логов
+# Mount points для конфигурации и логов (на внешнем диске)
 ############################################################
 
-/file
-make-directory xray-config
-make-directory xray-logs
+# Используем путь из 00-config.rsc
+:local XRAY_ROOT ($cfgContainerImagesRoot . "/xray")
 
-:log info "xRay mount directories created"
+# Создаём каталоги на внешнем диске
+/file
+make-directory ($XRAY_ROOT . "/config")
+make-directory ($XRAY_ROOT . "/logs")
+
+:log info ("xRay mount directories created on external storage: " . $XRAY_ROOT)
 
 ############################################################
 # Container registry configuration
@@ -77,12 +81,21 @@ set registry-url=https://registry-1.docker.io \
 # xRay container deployment
 ############################################################
 
+# Создаём mount points с полными путями
+/container/mounts
+:if ([:len [find name=xray-config]] = 0) do={
+    add name=xray-config src=($XRAY_ROOT . "/config") dst="/etc/xray"
+}
+:if ([:len [find name=xray-logs]] = 0) do={
+    add name=xray-logs src=($XRAY_ROOT . "/logs") dst="/var/log/xray"
+}
+
 /container
 :if ([:len [find name=$XRAY_CONTAINER]] = 0) do={
     add remote-image=$XRAY_VERSION \
         interface=$CONTAINER_BRIDGE \
         envlist="" \
-        root-dir=($cfgContainerImagesRoot . "/xray") \
+        root-dir=$XRAY_ROOT \
         mounts=xray-config,xray-logs \
         dns=$CONTAINER_GATEWAY \
         hostname=$XRAY_CONTAINER \
