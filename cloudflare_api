@@ -1,4 +1,4 @@
 curl "https://api.cloudflare.com/client/v4/user/tokens/verify" \
--H "Authorization: Bearer bzbQxvb2YeCULjwcXTjdr_FSpdaKtmLmpF_QX0k_"
+-H "Authorization: Bearer bzbQxvb2YeCULjwcXTjdr_FSpdaKtmLmpF_"
 
-bzbQxvb2YeCULjwcXTjdr_FSpdaKtmLmpF_QX0k_
+bzbQxvb2YeCULjwcXTjdr_FSpdaKtmLmpF_
