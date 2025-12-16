@@ -140,8 +140,9 @@ set $CERTBOT_CONTAINER memory-high=$CERTBOT_MEMORY
 #
 # /file/edit ($LETS_ROOT . "/certbot-data/cloudflare.ini")
 #
-# Или используя полный путь:
-# /file/edit /disk1/lets/certbot-data/cloudflare.ini
+# Пример полного пути (зависит от cfgContainerLetsRoot в 00-config.rsc):
+# /file/edit /disk1/lets/certbot-data/cloudflare.ini   # если cfgContainerLetsRoot="/disk1/lets"
+# /file/edit /usb1/lets/certbot-data/cloudflare.ini    # если cfgContainerLetsRoot="/usb1/lets"
 #
 # И добавьте:
 # dns_cloudflare_api_token = YOUR_CLOUDFLARE_API_TOKEN_HERE
