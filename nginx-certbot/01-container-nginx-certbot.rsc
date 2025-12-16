@@ -44,15 +44,15 @@
 ############################################################
 
 # Используем пути из 00-config.rsc
-:local LETS_ROOT $cfgContainerLetsRoot
+:local DATA_ROOT $cfgContainerDataRoot
 
 # Создаём каталоги на внешнем диске
 /file
-make-directory ($LETS_ROOT . "/nginx-conf")
-make-directory ($LETS_ROOT . "/nginx-html")
-make-directory ($LETS_ROOT . "/certbot-data")
+make-directory ($DATA_ROOT . "/nginx-conf")
+make-directory ($DATA_ROOT . "/nginx-html")
+make-directory ($DATA_ROOT . "/certbot-data")
 
-:log info "Created mount directories on external storage: $LETS_ROOT"
+:log info "Created mount directories on external storage: $DATA_ROOT"
 
 ############################################################
 # Container registry configuration
@@ -69,13 +69,13 @@ set registry-url=https://registry-1.docker.io \
 # Создаём mount points с полными путями
 /container/mounts
 :if ([:len [find name=nginx-conf]] = 0) do={
-    add name=nginx-conf src=($LETS_ROOT . "/nginx-conf") dst="/etc/nginx"
+    add name=nginx-conf src=($DATA_ROOT . "/nginx-conf") dst="/etc/nginx"
 }
 :if ([:len [find name=nginx-html]] = 0) do={
-    add name=nginx-html src=($LETS_ROOT . "/nginx-html") dst="/usr/share/nginx/html"
+    add name=nginx-html src=($DATA_ROOT . "/nginx-html") dst="/usr/share/nginx/html"
 }
 :if ([:len [find name=certbot-certs]] = 0) do={
-    add name=certbot-certs src=($LETS_ROOT . "/certbot-data") dst="/etc/letsencrypt"
+    add name=certbot-certs src=($DATA_ROOT . "/certbot-data") dst="/etc/letsencrypt"
 }
 
 /container
@@ -105,10 +105,10 @@ set $NGINX_CONTAINER memory-high=$NGINX_MEMORY
 # Создаём mount point для Certbot (работа с теми же сертификатами)
 /container/mounts
 :if ([:len [find name=certbot-work]] = 0) do={
-    add name=certbot-work src=($LETS_ROOT . "/certbot-data") dst="/etc/letsencrypt"
+    add name=certbot-work src=($DATA_ROOT . "/certbot-data") dst="/etc/letsencrypt"
 }
 :if ([:len [find name=certbot-config]] = 0) do={
-    add name=certbot-config src=($LETS_ROOT . "/certbot-data") dst="/certbot-data"
+    add name=certbot-config src=($DATA_ROOT . "/certbot-data") dst="/certbot-data"
 }
 
 /container
@@ -138,20 +138,20 @@ set $CERTBOT_CONTAINER memory-high=$CERTBOT_MEMORY
 # ВАЖНО: Создайте файл вручную!
 # После применения этого скрипта выполните:
 #
-# /file/edit ($LETS_ROOT . "/certbot-data/cloudflare.ini")
+# /file/edit ($DATA_ROOT . "/certbot-data/cloudflare.ini")
 #
-# Пример полного пути (зависит от cfgContainerLetsRoot в 00-config.rsc):
-# /file/edit /disk1/lets/certbot-data/cloudflare.ini   # если cfgContainerLetsRoot="/disk1/lets"
-# /file/edit /usb1/lets/certbot-data/cloudflare.ini    # если cfgContainerLetsRoot="/usb1/lets"
+# Пример полного пути (зависит от cfgContainerDataRoot в 00-config.rsc):
+# /file/edit /disk1/data/certbot-data/cloudflare.ini   # если cfgContainerDataRoot="/disk1/data"
+# /file/edit /usb1/data/certbot-data/cloudflare.ini    # если cfgContainerDataRoot="/usb1/data"
 #
 # И добавьте:
 # dns_cloudflare_api_token = YOUR_CLOUDFLARE_API_TOKEN_HERE
 #
 # Затем установите права:
-# /file/set ($LETS_ROOT . "/certbot-data/cloudflare.ini") permissions=owner-read,owner-write
+# /file/set ($DATA_ROOT . "/certbot-data/cloudflare.ini") permissions=owner-read,owner-write
 
-:log warning ("ВАЖНО: Создайте " . $LETS_ROOT . "/certbot-data/cloudflare.ini вручную с вашим Cloudflare API token!")
-:log info ("Путь для cloudflare.ini: " . $LETS_ROOT . "/certbot-data/cloudflare.ini")
+:log warning ("ВАЖНО: Создайте " . $DATA_ROOT . "/certbot-data/cloudflare.ini вручную с вашим Cloudflare API token!")
+:log info ("Путь для cloudflare.ini: " . $DATA_ROOT . "/certbot-data/cloudflare.ini")
 
 ############################################################
 # Automatic certificate renewal script

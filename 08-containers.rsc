@@ -32,9 +32,9 @@ set tmpdir=$cfgContainerTmpDir \
 ############################################################
 
 /container mount
-add name=mount-lets \
-    src=$cfgContainerLetsRoot \
-    dst=/etc/letsencrypt
+add name=mount-data \
+    src=$cfgContainerDataRoot \
+    dst=/data
 
 add name=mount-nginx-conf \
     src=($cfgContainerImagesRoot . "/nginx/conf") \

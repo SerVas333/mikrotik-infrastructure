@@ -149,7 +149,7 @@
 
 :global cfgContainerTmpDir "/disk1/tmp"
 :global cfgContainerImagesRoot "/disk1/images"
-:global cfgContainerLetsRoot "/disk1/lets"
+:global cfgContainerDataRoot "/disk1/data"  # Persistent data для контейнеров
 
 ############################################################
 # DOCKER IMAGES
