@@ -143,6 +143,17 @@
 :global cfgWGRemoteEndpoint "<REMOTE_SITE_IP>:13231"  # REPLACE!
 :global cfgWGRemoteAllowedIP "10.20.0.0/24"           # REPLACE with remote LAN
 
+# IPsec IKEv2 Site-to-Site (VTI route-based)
+:global cfgIPsecInterface "ipsec-s2s"
+:global cfgIPsecLocalAddress "10.12.0.1/30"           # VTI tunnel IP
+:global cfgIPsecRemoteAddress "10.12.0.2/30"          # Remote VTI tunnel IP
+:global cfgIPsecRemoteEndpoint "<REMOTE_SITE_PUBLIC_IP>"  # REPLACE!
+:global cfgIPsecRemoteNetwork "10.21.0.0/24"          # REPLACE with remote LAN
+:global cfgIPsecLocalNetwork "192.168.1.0/24"         # Your local LAN
+:global cfgIPsecProposalName "ike2-aes128gcm"
+:global cfgIPsecPolicyGroup "ipsec-s2s-group"
+:global cfgIPsecPeerName "remote-site"
+
 ############################################################
 # CONTAINER STORAGE PATHS
 ############################################################
