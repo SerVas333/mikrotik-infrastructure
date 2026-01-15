@@ -43,6 +43,23 @@ mikrotik/
 │   ├── 05-rb2011-wds-station-bridge.rsc # WDS Station на RB2011
 │   ├── WDS-DEPLOYMENT-GUIDE.md          # Полное руководство по WDS
 │   └── FIREWALL_ADDITIONS.txt  # Правила для firewall_complete.rsc
+├── pki/                         # 🔐 PKI Infrastructure (NEW!)
+│   ├── README.md               # Полное руководство по PKI (713 строк)
+│   ├── 00-pki-config.rsc       # PKI переменные
+│   ├── ca/                     # Certificate Authority (только R1-Core)
+│   │   ├── 01-ca-setup.rsc
+│   │   ├── 02-ca-ftp-server.rsc
+│   │   ├── 03-ca-auto-sign.rsc
+│   │   └── 04-ca-backup.rsc
+│   ├── router/                 # Router certificates (все роутеры)
+│   │   ├── 10-router-cert-gen.rsc
+│   │   ├── 11-router-ftp-upload.rsc
+│   │   ├── 12-router-cert-import.rsc
+│   │   └── 13-router-auto-renewal.rsc
+│   └── services/               # Service configuration
+│       ├── 20-ipsec-cert-auth.rsc
+│       └── 25-ipsec-psk-to-cert-migration.rsc
+├── HABR_ARTICLE.md             # 📝 Техническая статья о PKI (для Habr.com)
 ├── docs/                        # 📚 Полная документация (v1.3)
 │   ├── README.md               # Навигация по документации
 │   ├── QUICK_START.md          # Быстрый старт (15-20 минут)
@@ -229,6 +246,94 @@ ssh admin@<rb2011-ip>
 - RouterOS 6.40+ на обоих устройствах
 
 **Детали:** См. [wifi/WDS-DEPLOYMENT-GUIDE.md](./wifi/WDS-DEPLOYMENT-GUIDE.md)
+
+### Вариант 5: PKI Infrastructure (Certificate Authority) 🆕
+
+Полноценная PKI инфраструктура для автоматической выдачи сертификатов:
+
+```bash
+# === На R1-Core (Certificate Authority) ===
+scp 00-config.rsc 00-secrets.rsc admin@192.168.1.1:/
+scp -r pki/ admin@192.168.1.1:/
+
+ssh admin@192.168.1.1
+
+# Импорт базовой конфигурации
+/import 00-config.rsc
+/import 00-secrets.rsc
+/import pki/00-pki-config.rsc
+
+# Создание CA
+/import pki/ca/01-ca-setup.rsc       # Root CA (ECDSA P-384, 10 years)
+/import pki/ca/02-ca-ftp-server.rsc  # FTP для CSR/cert distribution
+/import pki/ca/03-ca-auto-sign.rsc   # Auto-signing каждые 5 минут
+/import pki/ca/04-ca-backup.rsc      # Encrypted backup (weekly)
+
+# КРИТИЧЕСКИ ВАЖНО: Скачать CA backup!
+exit
+scp admin@192.168.1.1:ca-root-backup.p12 ~/secure-backup/
+scp admin@192.168.1.1:ca-root.crt ~/pki-distribution/
+
+# Генерация собственного сертификата R1-Core
+ssh admin@192.168.1.1
+/import pki/router/10-router-cert-gen.rsc
+/import pki/router/11-router-ftp-upload.rsc
+/import pki/router/12-router-cert-import.rsc
+/import pki/router/13-router-auto-renewal.rsc
+
+# Настройка IPsec с certificates
+/import pki/services/20-ipsec-cert-auth.rsc
+
+# === На других роутерах (LAN) ===
+scp ~/pki-distribution/ca-root.crt admin@192.168.1.x:/
+scp -r pki/ admin@192.168.1.x:/
+
+ssh admin@192.168.1.x
+/certificate import file-name=ca-root.crt
+/certificate set ca-root trusted=yes
+
+# Получение сертификата (автоматически через FTP)
+/import pki/router/10-router-cert-gen.rsc
+/import pki/router/11-router-ftp-upload.rsc
+/import pki/router/12-router-cert-import.rsc
+/import pki/router/13-router-auto-renewal.rsc
+
+# === На VPN роутерах (за IPsec tunnel) ===
+# 1. Убедиться что VPN работает с PSK
+/ip ipsec active-peers print  # ph2-state=established
+
+# 2. Импорт CA и получение сертификата через VPN
+/certificate import file-name=ca-root.crt
+/certificate set ca-root trusted=yes
+/import pki/router/10-router-cert-gen.rsc
+/import pki/router/11-router-ftp-upload.rsc
+/import pki/router/12-router-cert-import.rsc
+
+# 3. Миграция IPsec: PSK → Certificates (zero downtime!)
+/import pki/services/25-ipsec-psk-to-cert-migration.rsc
+
+# 4. Auto-renewal
+/import pki/router/13-router-auto-renewal.rsc
+```
+
+**Что включено:**
+- ✅ Certificate Authority на R1-Core (ECDSA P-384, 10 years)
+- ✅ Автоматическая выдача сертификатов через FTP
+- ✅ Router certificates (ECDSA P-256, 2 years validity)
+- ✅ Auto-renewal за 30 дней до истечения
+- ✅ Zero-downtime миграция IPsec: PSK → Certificates
+- ✅ Bootstrap через VPN для удаленных филиалов
+- ✅ Encrypted CA backup (weekly automated)
+- ✅ IPsec/HTTPS/SSTP certificate authentication
+- ✅ 713 строк документации
+
+**Use cases:**
+- IPsec IKEv2 Site-to-Site VPN (замена PSK)
+- SSTP VPN (remote access)
+- HTTPS WebFig/API (secure management)
+- Multi-site networks (4-10 роутеров)
+
+**Детали:** См. [pki/README.md](./pki/README.md) и [HABR_ARTICLE.md](./HABR_ARTICLE.md)
 
 ---
 

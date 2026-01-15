@@ -155,6 +155,38 @@
 :global cfgIPsecPeerName "remote-site"
 
 ############################################################
+# PKI (Public Key Infrastructure) CONFIGURATION
+############################################################
+
+# Certificate Authority (CA) Settings
+:global cfgCACommonName "MikroTik-Root-CA"
+:global cfgCAKeyType "ecdsa"
+:global cfgCAKeySize 384                    # ECDSA P-384 for CA
+:global cfgCAValidityDays 3650              # 10 years
+
+# Router Certificate Settings
+:global cfgRouterCertName "router-cert"
+:global cfgRouterKeyType "ecdsa"
+:global cfgRouterKeySize 256                # ECDSA P-256 for routers
+:global cfgRouterCertValidityDays 730       # 2 years
+
+# FTP Distribution Settings
+:global cfgFTPPort 21
+:global cfgPKICSRPath "/pki/csr-inbox"
+:global cfgPKICertPath "/pki/certs-outbox"
+
+# Auto-Renewal Settings
+:global cfgCertRenewalDaysBefore 30         # Renew 30 days before expiry
+:global cfgCertCheckInterval "1d"           # Check daily for expiry
+
+# Auto-Signing Settings
+:global cfgCAAutoSignInterval "5m"          # Check for new CSR every 5 minutes
+
+# CRL (Certificate Revocation List)
+:global cfgCRLEnabled no                    # Enable/disable CRL support
+:global cfgCRLPath "/pki/crl"
+
+############################################################
 # CONTAINER STORAGE PATHS
 ############################################################
 
